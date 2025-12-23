@@ -93,18 +93,21 @@ class DatasetCreator:
 
             negative_examples = pd.DataFrame({'sentence1': first_sentences, 'sentence2': second_sentences})
             negative_examples['label'] = 0
+        logging.info(f'Created {negative_examples.shape[0]} positive examples')
         return negative_examples
 
     def create_dataset(self):
         # Logic to create a Hugging Face dataset
-        positive_examples = self.create_positive_samples(self.all_data)
+        positive_examples = self.create_positive_samples()
         negative_sample_size = len(positive_examples)
-        negative_examples = self.create_negative_samples(self.all_data, sample_size=negative_sample_size)
+        negative_examples = self.create_negative_samples(sample_size=negative_sample_size)
         df = pd.concat([positive_examples, negative_examples], ignore_index=True)
         df = df.sample(frac=1).reset_index(drop=True)
 
         df_train, df_temp = train_test_split(df, test_size=0.3, random_state=42)
         df_val, df_test = train_test_split(df_temp, test_size=0.5, random_state=42)
+
+        self.create_huggingface_dataset(df_train, df_val, df_test)
 
     def create_huggingface_dataset(self, df_train, df_val, df_test):
         features = Features({
@@ -148,13 +151,17 @@ class DatasetCreator:
         path = self.config['huggingface']['dataset_path']
         self.dataset.push_to_hub(path)
 
-    def _split_on_punctuation(string):
+    def cleanup_files(self):
+        local_data_path = self.config['kaggle']['local_data_path']
+        os.remove(local_data_path)
+
+    def _split_on_punctuation(self, string):
         return re.split(r'[.?!\n]+', string)
 
-    def _split_paragraphs(string):
+    def _split_paragraphs(self, string):
         return re.split(r'[\n]{2,}', string)
 
-    def _process_sentence(string):
+    def _process_sentence(self, string):
         chars = '\\`*_{}[]()>#+-"'
         for c in chars:
             string = string.replace(c, "")
