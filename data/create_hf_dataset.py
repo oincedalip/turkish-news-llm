@@ -2,19 +2,27 @@ import configparser
 import opendatasets as od
 import pandas as pd
 import re
+import os
 import random
+import logging
 
+from pathlib import Path
 from sklearn.model_selection import train_test_split
 from datasets import Dataset, DatasetDict, Features, Value, ClassLabel
 
 class DatasetCreator:
-    def __init__(self, data_source):
-        self.data_source = data_source
+    def __init__(self):
         self.config = self.load_config()
+        self.load_data()
+        self.preprocess_data()
+        self.create_dataset()
+        # self.save_dataset()
+        # self.cleanup_files()
 
     def load_config(self):
         config = configparser.ConfigParser()
-        config.read('data/config.ini')
+        config_path = Path(__file__).resolve().parent / "config.ini"
+        config.read(config_path)
         return config
 
     def load_data(self):
