@@ -2,7 +2,7 @@ import configparser
 import opendatasets as od
 import pandas as pd
 import re
-import os
+import shutil
 import random
 import logging
 
@@ -17,7 +17,7 @@ class DatasetCreator:
         self.preprocess_data()
         self.create_dataset()
         # self.save_dataset()
-        # self.cleanup_files()
+        self.cleanup_files()
 
     def load_config(self):
         config = configparser.ConfigParser()
@@ -145,15 +145,22 @@ class DatasetCreator:
             "validation": val_ds,
             "test": test_ds,
         })
+        logging.info('Created Huggingface Dataset object')
 
     def save_dataset(self):
         # Logic to save the dataset to the specified path
         path = self.config['huggingface']['dataset_path']
         self.dataset.push_to_hub(path)
+        logging.info('Pushed the dataset to Huggingface hub')
 
     def cleanup_files(self):
-        local_data_path = self.config['kaggle']['local_data_path']
-        os.remove(local_data_path)
+        try:
+            local_data_path = self.config['kaggle']['local_data_path']
+            folder_to_remove = Path(local_data_path).resolve().parent
+            shutil.rmtree(folder_to_remove)
+            logging.info('Removed intermediary data files downloaded from kaggle')
+        except:
+            logging.error('Downloaded data files could not be removed')
 
     def _split_on_punctuation(self, string):
         return re.split(r'[.?!\n]+', string)
