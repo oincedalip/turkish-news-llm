@@ -5,10 +5,13 @@ import re
 import shutil
 import random
 import logging
+import json
+
 
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from datasets import Dataset, DatasetDict, Features, Value, ClassLabel
+from huggingface_hub import login as hf_login
 
 from tqdm.auto import tqdm
 
@@ -21,7 +24,7 @@ class DatasetCreator:
         self.load_data()
         self.preprocess_data()
         self.create_dataset()
-        # self.save_dataset()
+        self.save_dataset()
         self.cleanup_files()
 
     def load_config(self):
@@ -167,6 +170,7 @@ class DatasetCreator:
 
     def save_dataset(self):
         # Logic to save the dataset to the specified path
+        self.huggingface_login()
         path = self.config['huggingface']['dataset_path']
         self.dataset.push_to_hub(path)
         logging.info('Pushed the dataset to Huggingface hub')
@@ -191,3 +195,12 @@ class DatasetCreator:
         for c in chars:
             string = string.replace(c, "")
         return string.strip()
+    
+    def huggingface_login(self):
+        token_json_path = Path(__file__).resolve().parent.parent / 'huggingface_token.json'
+        with open(token_json_path, 'r') as f:
+            token_json = json.load(f)
+            token = token_json.get('token')
+            print(token_json)
+        hf_login(token=token)
+
