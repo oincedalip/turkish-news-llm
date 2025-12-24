@@ -98,7 +98,7 @@ class DatasetCreator:
                 return get_random_sentence()
 
         for _ in range(sample_size):
-            sentence1, paragraph_index1, sentence_index1 = get_random_sentence()
+            sentence1, paragraph_index1, _ = get_random_sentence()
             while len(sentence1.split()) < min_sentence_length:
                 sentence1, paragraph_index1, _ = get_random_sentence()
             sentence2, paragraph_index2, _ = get_random_sentence()
