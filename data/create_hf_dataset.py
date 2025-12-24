@@ -10,6 +10,11 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from datasets import Dataset, DatasetDict, Features, Value, ClassLabel
 
+from tqdm.auto import tqdm
+
+LOG_FORMAT = '%(asctime)-15s| %(levelname)-7s| %(name)s | %(message)s'
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+
 class DatasetCreator:
     def __init__(self):
         self.config = self.load_config()
@@ -30,12 +35,15 @@ class DatasetCreator:
         kaggle_url = self.config['kaggle']['kaggle_dataset_url']
         local_data_path = self.config['kaggle']['local_data_path']
         od.download(kaggle_url)
+        logging.info('Successfully downloaded kaggle data')
         data = pd.read_csv(local_data_path)
         self.data = data
 
     def preprocess_data(self):
         # Logic to preprocess the loaded data
         all_data = []
+        number_of_paragraphs = 0
+        number_of_sentences = 0
         for i in range(len(self.data)):
             paragraphs = self._split_paragraphs(self.data.iloc[i].text)
             for paragraph in paragraphs:
@@ -46,12 +54,17 @@ class DatasetCreator:
                         processed_sentence = self._process_sentence(sentence)
                         if processed_sentence:
                             paragraph_sentences.append(processed_sentence)
+                            number_of_sentences += 1
                     all_data.append(paragraph_sentences)
+                    number_of_paragraphs += 1
         self.all_data = all_data
+        logging.info(f'Preprocessing completed: {number_of_paragraphs} paragraphs and {number_of_sentences} sentences')
 
     def create_positive_samples(self, min_sentence_length=8):
         first_sentences = []
         second_sentences = []
+        progress_bar = tqdm(range(len(self.all_data)))
+        logging.info(f'Creating positive samples from {len(self.all_data)} paragraphs')
         for paragraph in self.all_data:
             if len(paragraph) > 1:
                 for i in range(len(paragraph) - 1):
@@ -62,14 +75,18 @@ class DatasetCreator:
                         and len(sentence2.split(' ')) >= min_sentence_length:
                         first_sentences.append(sentence1)
                         second_sentences.append(sentence2)
+            progress_bar.update(1)
 
-                positive_examples = pd.DataFrame({'sentence1': first_sentences, 'sentence2': second_sentences})
-                positive_examples['label'] = 1
+        positive_examples = pd.DataFrame({'sentence1': first_sentences, 'sentence2': second_sentences})
+        positive_examples['label'] = 1
+        logging.info(f'Created {positive_examples.shape[0]} positive examples')
         return positive_examples
 
     def create_negative_samples(self, min_sentence_length=8, sample_size=10000):
         first_sentences = []
         second_sentences = []
+        progress_bar = tqdm(range(sample_size))
+        logging.info(f'Creating {sample_size} negative samples')
 
         def get_random_sentence():
             try:
@@ -90,10 +107,11 @@ class DatasetCreator:
 
             first_sentences.append(sentence1)
             second_sentences.append(sentence2)
+            progress_bar.update(1)
 
-            negative_examples = pd.DataFrame({'sentence1': first_sentences, 'sentence2': second_sentences})
-            negative_examples['label'] = 0
-        logging.info(f'Created {negative_examples.shape[0]} positive examples')
+        negative_examples = pd.DataFrame({'sentence1': first_sentences, 'sentence2': second_sentences})
+        negative_examples['label'] = 0
+        logging.info(f'Created {negative_examples.shape[0]} negative examples')
         return negative_examples
 
     def create_dataset(self):
