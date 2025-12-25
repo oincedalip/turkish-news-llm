@@ -201,6 +201,5 @@ class DatasetCreator:
         with open(token_json_path, 'r') as f:
             token_json = json.load(f)
             token = token_json.get('token')
-            print(token_json)
         hf_login(token=token)
 
