@@ -1,0 +1,20 @@
+from transformers import AutoTokenizer
+from src.config.config_helper import ConfigHelper
+
+class DataTokenizer():
+    def __init__(self, raw_datasets):
+        config_helper = ConfigHelper()
+        self.config = config_helper.get_config()
+        self.raw_datasets = raw_datasets
+        self.tokenize()
+
+
+    def tokenize(self):
+        checkpoint = self.config['modeling']['base_model_name']
+        self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+        self.tokenized_datasets = self.raw_datasets.map(self._tokenize_function, batched=True)
+
+
+    def _tokenize_function(self, example):
+        return self.tokenizer(example["sentence1"], example["sentence2"], truncation=True)
+
