@@ -1,11 +1,12 @@
 from transformers import AutoTokenizer
 from src.config.config_helper import ConfigHelper
+from src.data.load_dataset import HuggingFaceDataset
 
 class DataTokenizer():
-    def __init__(self, raw_datasets):
+    def __init__(self, dataset: HuggingFaceDataset):
         config_helper = ConfigHelper()
         self.config = config_helper.get_config()
-        self.raw_datasets = raw_datasets
+        self.raw_datasets = dataset.raw_datasets
         self.tokenize()
 
 
