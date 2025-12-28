@@ -7,6 +7,7 @@ from src.data.load_dataset import HuggingFaceDataset
 from src.modeling.tokenizer import DataTokenizer
 from src.modeling.collator import Collator
 from src.modeling.modeling import Modeling
+from utils.utils import huggingface_login
 
 import logging
 
@@ -19,6 +20,7 @@ class Training():
         self.config = config_helper.get_config()
 
     def train(self):
+        huggingface_login()
         dataset = HuggingFaceDataset()
         tokenizer = DataTokenizer(dataset)
         collator = Collator(tokenizer=tokenizer)
