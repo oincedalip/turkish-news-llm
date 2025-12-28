@@ -2,6 +2,11 @@ from transformers import AutoTokenizer
 from src.config.config_helper import ConfigHelper
 from src.data.load_dataset import HuggingFaceDataset
 
+import logging
+
+LOG_FORMAT = '%(asctime)-15s| %(levelname)-7s| %(name)s | %(message)s'
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+
 class DataTokenizer():
     def __init__(self, dataset: HuggingFaceDataset):
         config_helper = ConfigHelper()
@@ -14,6 +19,7 @@ class DataTokenizer():
         checkpoint = self.config['modeling']['base_model_name']
         self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
         self.tokenized_datasets = self.raw_datasets.map(self._tokenize_function, batched=True)
+        logging.info('tokenization completed successfully')
 
 
     def _tokenize_function(self, example):

@@ -8,6 +8,11 @@ from src.modeling.tokenizer import DataTokenizer
 from src.modeling.collator import Collator
 from src.modeling.modeling import Modeling
 
+import logging
+
+LOG_FORMAT = '%(asctime)-15s| %(levelname)-7s| %(name)s | %(message)s'
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+
 class Training():
     def __init__(self):
         config_helper = ConfigHelper()
@@ -29,6 +34,8 @@ class Training():
             processing_class=tokenizer.tokenizer,
             compute_metrics=Training.compute_metrics,
         )
+        logging.info('Starting training')
+        trainer.train()
 
 
     def _get_training_args(self):
