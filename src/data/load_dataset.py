@@ -2,7 +2,7 @@ from datasets import load_dataset
 from src.config.config_helper import ConfigHelper
 
 
-class HuggingFaceDatasetHelper():
+class HuggingFaceDataset():
     def __init__(self):
         config_helper = ConfigHelper()
         self.config = config_helper.get_config()
